@@ -8,7 +8,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 def main():
     logger.info("Iniciando paid-media-job")
     logger.info("Job finalizado com sucesso")
