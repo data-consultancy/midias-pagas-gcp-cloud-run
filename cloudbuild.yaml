@@ -1,0 +1,23 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - 'docker pull gcr.io/jota-dados-integracao-ga4/paid-media-job:latest || true'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - build
+      - '--cache-from'
+      - 'gcr.io/jota-dados-integracao-ga4/paid-media-job:latest'
+      - '-t'
+      - 'gcr.io/jota-dados-integracao-ga4/paid-media-job:latest'
+      - '.'
+
+images:
+  - 'gcr.io/jota-dados-integracao-ga4/paid-media-job:latest'
+
+options:
+  logging: GCS_ONLY
+
+logsBucket: 'gs://cloud-build-logs-jota-dados-integracao-ga4'
