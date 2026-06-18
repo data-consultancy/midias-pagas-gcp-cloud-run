@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 def main():
     logger.info("Iniciando paid-media-job")
-    # TODO: implementar consumo de dados de mídias pagas
     logger.info("Job finalizado com sucesso")
 
 
