@@ -8,7 +8,7 @@ from google.cloud import bigquery
 logger = logging.getLogger(__name__)
 
 PROJECT_ID = os.environ.get("PROJECT_ID")
-DATASET_BRONZE = os.environ.get("DATASET_BRONZE", "midiapaga_bronze")
+DATASET_BRONZE = os.environ.get("DATASET_BRONZE")
 DATASET_SILVER = os.environ.get("DATASET_SILVER")
 TABLE_SILVER = os.environ.get("TABLE_SILVER")
 
