@@ -52,10 +52,22 @@ FROM (
 """
 
 
+def _resolve_target_date() -> str:
+    reprocess_date = os.environ.get("REPROCESS_DATE", "").strip()
+    if reprocess_date:
+        try:
+            date.fromisoformat(reprocess_date)
+        except ValueError:
+            raise ValueError(f"REPROCESS_DATE inválida: '{reprocess_date}'. Use o formato YYYY-MM-DD.")
+        logger.info("Modo reprocessamento: data alvo = %s", reprocess_date)
+        return reprocess_date
+    return (date.today() - timedelta(days=1)).isoformat()
+
+
 def insert_midias_pagas():
     client = bigquery.Client(project=PROJECT_ID)
-    d_minus_1 = (date.today() - timedelta(days=1)).isoformat()
-    partition_id = d_minus_1.replace("-", "")
+    target_date = _resolve_target_date()
+    partition_id = target_date.replace("-", "")
     target_table = f"{PROJECT_ID}.{DATASET_SILVER}.{TABLE_SILVER}"
 
     job_config = bigquery.QueryJobConfig(
@@ -64,7 +76,7 @@ def insert_midias_pagas():
         create_disposition=bigquery.CreateDisposition.CREATE_NEVER,
     )
 
-    query = _build_select_query(d_minus_1)
-    logger.info("Sobrescrevendo partição D-1 (%s) na tabela %s...", d_minus_1, TABLE_SILVER)
+    query = _build_select_query(target_date)
+    logger.info("Sobrescrevendo partição %s na tabela %s...", target_date, TABLE_SILVER)
     client.query(query, job_config=job_config).result()
-    logger.info("Insert concluído. Data: %s | Tabela: %s", d_minus_1, TABLE_SILVER)
+    logger.info("Insert concluído. Data: %s | Tabela: %s", target_date, TABLE_SILVER)
