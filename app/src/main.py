@@ -1,6 +1,8 @@
 import logging
 import sys
 
+from utils.bigquery_setup import create_table_if_not_exists
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -8,8 +10,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 def main():
     logger.info("Iniciando paid-media-job")
+    create_table_if_not_exists()
     logger.info("Job finalizado com sucesso")
 
 
