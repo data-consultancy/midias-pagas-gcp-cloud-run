@@ -15,32 +15,18 @@ TABLE_SILVER = os.environ.get("TABLE_SILVER")
 _SQL_PATH = Path(__file__).parent / "sql" / "midias_pagas.sql"
 
 
-def _build_insert_query(d_minus_1: str) -> str:
-    source_sql = (
+def _build_select_query(d_minus_1: str) -> str:
+    cte_block = (
         _SQL_PATH.read_text()
         .replace("{PROJECT_ID}", PROJECT_ID)
         .replace("{DATASET_BRONZE}", DATASET_BRONZE)
+        .replace("{D_MINUS_1}", d_minus_1)
         .rstrip()
         .rstrip(";")
+        .rsplit("\n\nSELECT", 1)[0]
     )
 
-    # Separa o bloco de CTEs do SELECT final para montar o INSERT
-    cte_block = source_sql.rsplit("\n\nSELECT", 1)[0]
-    target_table = f"{PROJECT_ID}.{DATASET_SILVER}.{TABLE_SILVER}"
-
     return f"""\
-INSERT INTO `{target_table}` (
-    data,
-    plataforma,
-    campanha,
-    conjunto_anuncio,
-    anuncio,
-    impressions,
-    clicks,
-    custo,
-    conversoes,
-    data_atualizacao
-)
 {cte_block}
 
 SELECT
@@ -63,20 +49,22 @@ FROM (
     UNION ALL
     SELECT * FROM microsoft_ads
 )
-WHERE data_registro = '{d_minus_1}'
 """
 
 
 def insert_midias_pagas():
     client = bigquery.Client(project=PROJECT_ID)
     d_minus_1 = (date.today() - timedelta(days=1)).isoformat()
+    partition_id = d_minus_1.replace("-", "")
     target_table = f"{PROJECT_ID}.{DATASET_SILVER}.{TABLE_SILVER}"
 
-    delete_query = f"DELETE FROM `{target_table}` WHERE data = '{d_minus_1}'"
-    logger.info("Deletando registros D-1 (%s) da tabela %s...", d_minus_1, TABLE_SILVER)
-    client.query(delete_query).result()
+    job_config = bigquery.QueryJobConfig(
+        destination=f"{target_table}${partition_id}",
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
+        create_disposition=bigquery.CreateDisposition.CREATE_NEVER,
+    )
 
-    insert_query = _build_insert_query(d_minus_1)
-    logger.info("Inserindo dados D-1 (%s) na tabela %s...", d_minus_1, TABLE_SILVER)
-    client.query(insert_query).result()
+    query = _build_select_query(d_minus_1)
+    logger.info("Sobrescrevendo partição D-1 (%s) na tabela %s...", d_minus_1, TABLE_SILVER)
+    client.query(query, job_config=job_config).result()
     logger.info("Insert concluído. Data: %s | Tabela: %s", d_minus_1, TABLE_SILVER)

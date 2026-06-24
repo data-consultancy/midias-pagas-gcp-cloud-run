@@ -33,6 +33,7 @@ def create_table_if_not_exists():
 
     table_ref = f"{PROJECT_ID}.{DATASET_SILVER}.{TABLE_SILVER}"
     table = bigquery.Table(table_ref, schema=SCHEMA)
+    table.time_partitioning = bigquery.TimePartitioning(field="data")
     try:
         client.create_table(table)
         logger.info("Tabela %s criada com sucesso.", TABLE_SILVER)
