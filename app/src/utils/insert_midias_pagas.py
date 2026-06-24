@@ -25,7 +25,7 @@ def _build_insert_query(d_minus_1: str) -> str:
     )
 
     # Separa o bloco de CTEs do SELECT final para montar o INSERT
-    cte_block = source_sql.rsplit("\nSELECT * FROM", 1)[0]
+    cte_block = source_sql.rsplit("\n\nSELECT", 1)[0]
     target_table = f"{PROJECT_ID}.{DATASET_SILVER}.{TABLE_SILVER}"
 
     return f"""\
