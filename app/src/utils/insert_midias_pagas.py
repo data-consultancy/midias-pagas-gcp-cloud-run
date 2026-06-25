@@ -12,6 +12,7 @@ DATASET_BRONZE = os.environ.get("DATASET_BRONZE")
 DATASET_SILVER = os.environ.get("DATASET_SILVER")
 TABLE_SILVER = os.environ.get("TABLE_SILVER")
 FULL_LOAD = os.environ.get("FULL_LOAD", "")
+REPROCESS_DATE = os.environ.get("REPROCESS_DATE", "")
 
 _SQL_PATH = Path(__file__).parent / "sql" / "midias_pagas.sql"
 
@@ -61,7 +62,7 @@ def _is_full_load() -> bool:
 
 
 def _resolve_target_date() -> str:
-    reprocess_date = os.environ.get("REPROCESS_DATE", "").strip()
+    reprocess_date = REPROCESS_DATE.strip()
     if reprocess_date:
         try:
             date.fromisoformat(reprocess_date)
