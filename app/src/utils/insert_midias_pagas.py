@@ -75,6 +75,7 @@ def _resolve_target_date() -> str:
 def insert_midias_pagas():
     client = bigquery.Client(project=PROJECT_ID)
     target_table = f"{PROJECT_ID}.{DATASET_SILVER}.{TABLE_SILVER_MIDIAS_PAGAS}"
+    logger.info(target_table)
 
     if _is_full_load():
         job_config = bigquery.QueryJobConfig(
