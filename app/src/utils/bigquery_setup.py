@@ -9,6 +9,7 @@ PROJECT_ID = os.environ.get("PROJECT_ID")
 DATASET_SILVER = os.environ.get("DATASET_SILVER")
 TABLE_SILVER_MIDIAS_PAGAS = os.environ.get("TABLE_SILVER_MIDIAS_PAGAS", "midias_pagas")
 TABLE_DIM_AD = os.environ.get("TABLE_DIM_AD", "dim_ad")
+TABLE_DIM_CAMPANHA = os.environ.get("TABLE_DIM_CAMPANHA", "dim_campanha")
 
 SCHEMA_MIDIAS_PAGAS = [
     bigquery.SchemaField("data", "DATE", mode="NULLABLE"),
@@ -32,6 +33,23 @@ SCHEMA_DIM_AD = [
 ]
 
 
+SCHEMA_DIM_CAMPANHA = [
+    bigquery.SchemaField("sk_campanha", "STRING", mode="NULLABLE", description="Chave substituta única gerada via MD5"),
+    bigquery.SchemaField("sk_plataforma", "INT64", mode="NULLABLE", description="ID fixo da plataforma (FK)"),
+    bigquery.SchemaField("id_campanha_original", "STRING", mode="NULLABLE", description="ID real da campanha extraído da API"),
+    bigquery.SchemaField("nm_campanha", "STRING", mode="NULLABLE", description="Nome da campanha"),
+    bigquery.SchemaField("ds_status_campanha", "STRING", mode="NULLABLE", description="Status atual da campanha"),
+    bigquery.SchemaField("ds_objetivo_campanha", "STRING", mode="NULLABLE", description="Objetivo de marketing"),
+    bigquery.SchemaField("dt_inicio_campanha", "DATE", mode="NULLABLE", description="Data de início da campanha"),
+    bigquery.SchemaField("canal", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("tipo", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("objetivo", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("dif", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("funil", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("campanha_tratada", "STRING", mode="NULLABLE"),
+]
+
+
 def create_midias_pagas_if_not_exists():
     client = bigquery.Client(project=PROJECT_ID)
 
@@ -48,6 +66,20 @@ def create_midias_pagas_if_not_exists():
         logger.info("Tabela %s criada com sucesso.", TABLE_SILVER_MIDIAS_PAGAS)
     except Conflict:
         logger.info("Tabela %s já existe, nenhuma ação necessária.", TABLE_SILVER_MIDIAS_PAGAS)
+
+
+def create_dim_campanha_if_not_exists():
+    client = bigquery.Client(project=PROJECT_ID)
+
+    table_ref = f"{PROJECT_ID}.{DATASET_SILVER}.{TABLE_DIM_CAMPANHA}"
+    table = bigquery.Table(table_ref, schema=SCHEMA_DIM_CAMPANHA)
+    table.clustering_fields = ["sk_campanha", "sk_plataforma"]
+    table.description = "Dimensão de campanhas consolidadas das plataformas."
+    try:
+        client.create_table(table)
+        logger.info("Tabela %s criada com sucesso.", TABLE_DIM_CAMPANHA)
+    except Conflict:
+        logger.info("Tabela %s já existe, nenhuma ação necessária.", TABLE_DIM_CAMPANHA)
 
 
 def create_dim_ad_if_not_exists():
