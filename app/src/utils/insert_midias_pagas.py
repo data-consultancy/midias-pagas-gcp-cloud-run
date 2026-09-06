@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 PROJECT_ID = os.environ.get("PROJECT_ID")
 DATASET_BRONZE = os.environ.get("DATASET_BRONZE")
 DATASET_SILVER = os.environ.get("DATASET_SILVER")
-TABLE_SILVER = os.environ.get("TABLE_SILVER")
+TABLE_SILVER_MIDIAS_PAGAS = os.environ.get("TABLE_SILVER_MIDIAS_PAGAS")
 FULL_LOAD = os.environ.get("FULL_LOAD", "")
 REPROCESS_DATE = os.environ.get("REPROCESS_DATE", "")
 
@@ -38,7 +38,6 @@ def _build_select_query(d_minus_1: str | None, full_load: bool = False) -> str:
                 data_registro        AS data,
                 plataforma,
                 campanha_nome        AS campanha,
-                CAST(NULL AS STRING) AS conjunto_anuncio,
                 anuncio_nome         AS anuncio,
                 impressoes           AS impressions,
                 cliques              AS clicks,
@@ -75,7 +74,7 @@ def _resolve_target_date() -> str:
 
 def insert_midias_pagas():
     client = bigquery.Client(project=PROJECT_ID)
-    target_table = f"{PROJECT_ID}.{DATASET_SILVER}.{TABLE_SILVER}"
+    target_table = f"{PROJECT_ID}.{DATASET_SILVER}.{TABLE_SILVER_MIDIAS_PAGAS}"
 
     if _is_full_load():
         job_config = bigquery.QueryJobConfig(
@@ -84,9 +83,9 @@ def insert_midias_pagas():
             create_disposition=bigquery.CreateDisposition.CREATE_NEVER,
         )
         query = _build_select_query(None, full_load=True)
-        logger.info("Modo carga full: sobrescrevendo tabela inteira %s...", TABLE_SILVER)
+        logger.info("Modo carga full: sobrescrevendo tabela inteira %s...", TABLE_SILVER_MIDIAS_PAGAS)
         client.query(query, job_config=job_config).result()
-        logger.info("Carga full concluída. Tabela: %s", TABLE_SILVER)
+        logger.info("Carga full concluída. Tabela: %s", TABLE_SILVER_MIDIAS_PAGAS)
     else:
         target_date = _resolve_target_date()
         partition_id = target_date.replace("-", "")
@@ -96,6 +95,6 @@ def insert_midias_pagas():
             create_disposition=bigquery.CreateDisposition.CREATE_NEVER,
         )
         query = _build_select_query(target_date)
-        logger.info("Sobrescrevendo partição %s na tabela %s...", target_date, TABLE_SILVER)
+        logger.info("Sobrescrevendo partição %s na tabela %s...", target_date, TABLE_SILVER_MIDIAS_PAGAS)
         client.query(query, job_config=job_config).result()
-        logger.info("Insert concluído. Data: %s | Tabela: %s", target_date, TABLE_SILVER)
+        logger.info("Insert concluído. Data: %s | Tabela: %s", target_date, TABLE_SILVER_MIDIAS_PAGAS)
