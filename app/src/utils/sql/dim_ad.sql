@@ -65,5 +65,5 @@ WHEN MATCHED THEN
         T.nm_ad = S.nm_ad,
         T.ds_status_ad = S.ds_status_ad
 WHEN NOT MATCHED THEN
-    INSERT (sk_ad, sk_campanha, id_ad_original, nm_ad, ds_status_ad)
-    VALUES (S.sk_ad, S.sk_campanha, S.id_ad_original, S.nm_ad, S.ds_status_ad);
+    INSERT (sk_ad, sk_campanha, id_ad_original, nm_ad, ds_status_ad, data_carga)
+    VALUES (S.sk_ad, S.sk_campanha, S.id_ad_original, S.nm_ad, S.ds_status_ad, CURRENT_DATE());

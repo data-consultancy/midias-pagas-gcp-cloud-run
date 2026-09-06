@@ -28,6 +28,7 @@ SCHEMA_DIM_AD = [
     bigquery.SchemaField("id_ad_original", "STRING", mode="NULLABLE", description="ID real do anúncio extraído da API"),
     bigquery.SchemaField("nm_ad", "STRING", mode="NULLABLE", description="Nome ou título descritivo do anúncio"),
     bigquery.SchemaField("ds_status_ad", "STRING", mode="NULLABLE", description="Status atual do anúncio"),
+    bigquery.SchemaField("data_carga", "DATE", mode="NULLABLE", description="Data em que o registro foi inserido pela primeira vez"),
 ]
 
 
