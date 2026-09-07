@@ -10,6 +10,8 @@ DATASET_SILVER = os.environ.get("DATASET_SILVER")
 TABLE_SILVER_MIDIAS_PAGAS = os.environ.get("TABLE_SILVER_MIDIAS_PAGAS", "midias_pagas")
 TABLE_DIM_AD = os.environ.get("TABLE_DIM_AD", "dim_ad")
 TABLE_DIM_CAMPANHA = os.environ.get("TABLE_DIM_CAMPANHA", "dim_campanha")
+TABLE_DIM_TRAFEGO_GA4 = os.environ.get("TABLE_DIM_TRAFEGO_GA4", "dim_trafego_ga4")
+TABLE_FATO_SESSOES_GA4 = os.environ.get("TABLE_FATO_SESSOES_GA4", "fato_sessoes_ga4")
 
 SCHEMA_MIDIAS_PAGAS = [
     bigquery.SchemaField("data", "DATE", mode="NULLABLE"),
@@ -48,6 +50,51 @@ SCHEMA_DIM_CAMPANHA = [
     bigquery.SchemaField("funil", "STRING", mode="NULLABLE"),
     bigquery.SchemaField("campanha_tratada", "STRING", mode="NULLABLE"),
 ]
+
+
+SCHEMA_DIM_TRAFEGO_GA4 = [
+    bigquery.SchemaField("traffic_sk", "INT64", mode="NULLABLE"),
+    bigquery.SchemaField("source", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("medium", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("campaign", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("traffic_group", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("origem_ga4", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("source_medium", "STRING", mode="NULLABLE"),
+]
+
+SCHEMA_FATO_SESSOES_GA4 = [
+    bigquery.SchemaField("data", "DATE", mode="NULLABLE"),
+    bigquery.SchemaField("campanha", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("source_medium", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("sessoes_ga4", "INT64", mode="NULLABLE"),
+]
+
+
+def create_dim_trafego_ga4_if_not_exists():
+    client = bigquery.Client(project=PROJECT_ID)
+
+    table_ref = f"{PROJECT_ID}.{DATASET_SILVER}.{TABLE_DIM_TRAFEGO_GA4}"
+    table = bigquery.Table(table_ref, schema=SCHEMA_DIM_TRAFEGO_GA4)
+    table.clustering_fields = ["traffic_sk", "traffic_group"]
+    table.description = "Materialização física da view vw_dTraffic para redução drástica de custos em scans. Atualizada via pipeline ELT."
+    try:
+        client.create_table(table)
+        logger.info("Tabela %s criada com sucesso.", TABLE_DIM_TRAFEGO_GA4)
+    except Conflict:
+        logger.info("Tabela %s já existe, nenhuma ação necessária.", TABLE_DIM_TRAFEGO_GA4)
+
+
+def create_fato_sessoes_ga4_if_not_exists():
+    client = bigquery.Client(project=PROJECT_ID)
+
+    table_ref = f"{PROJECT_ID}.{DATASET_SILVER}.{TABLE_FATO_SESSOES_GA4}"
+    table = bigquery.Table(table_ref, schema=SCHEMA_FATO_SESSOES_GA4)
+    table.time_partitioning = bigquery.TimePartitioning(field="data")
+    try:
+        client.create_table(table)
+        logger.info("Tabela %s criada com sucesso.", TABLE_FATO_SESSOES_GA4)
+    except Conflict:
+        logger.info("Tabela %s já existe, nenhuma ação necessária.", TABLE_FATO_SESSOES_GA4)
 
 
 def create_midias_pagas_if_not_exists():
