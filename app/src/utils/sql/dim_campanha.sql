@@ -1,55 +1,71 @@
 MERGE INTO `{PROJECT_ID}.{DATASET_SILVER}.{TABLE_DIM_CAMPANHA}` T
 USING (
     WITH staging_campanhas AS (
-        SELECT DISTINCT
+        SELECT
             2 AS sk_plataforma,
             CAST(Campaign__Campaign_Id AS STRING) AS id_campanha_original,
             Campaign__Campaign_name AS nm_campanha,
             Campaign__Campaign_status AS ds_status_campanha,
             CAST(NULL AS STRING) AS ds_objetivo_campanha,
-            CAST(NULL AS DATE) AS dt_inicio_campanha
+            CAST(NULL AS DATE) AS dt_inicio_campanha,
+            CAST(Row_Updated_At AS TIMESTAMP) AS row_updated_at
         FROM `{PROJECT_ID}.{DATASET_BRONZE}.googleads_campaigns`
         WHERE Campaign__Campaign_Id IS NOT NULL
         AND DATE(Row_Updated_At) = '{D_MINUS_1}'
 
-        UNION DISTINCT
+        UNION ALL
 
-        SELECT DISTINCT
+        SELECT
             1 AS sk_plataforma,
             CAST(id AS STRING) AS id_campanha_original,
             name AS nm_campanha,
             status AS ds_status_campanha,
             CAST(objective AS STRING) AS ds_objetivo_campanha,
-            SAFE_CAST(start_time AS DATE) AS dt_inicio_campanha
+            SAFE_CAST(start_time AS DATE) AS dt_inicio_campanha,
+            CAST(Row_Updated_At AS TIMESTAMP) AS row_updated_at
         FROM `{PROJECT_ID}.{DATASET_BRONZE}.metaads_campaigns`
         WHERE id IS NOT NULL
         AND DATE(Row_Updated_At) = '{D_MINUS_1}'
 
-        UNION DISTINCT
+        UNION ALL
 
-        SELECT DISTINCT
+        SELECT
             4 AS sk_plataforma,
             REGEXP_EXTRACT(CAST(Campaign__Campaign_Id AS STRING), r'(\d+)') AS id_campanha_original,
             Campaign__Campaign_name AS nm_campanha,
             Campaign__Campaign_status AS ds_status_campanha,
             CAST(Campaign__Objective_type AS STRING) AS ds_objetivo_campanha,
-            SAFE_CAST(Campaign__Campaign_created_at AS DATE) AS dt_inicio_campanha
+            SAFE_CAST(Campaign__Campaign_created_at AS DATE) AS dt_inicio_campanha,
+            CAST(Row_Updated_At AS TIMESTAMP) AS row_updated_at
         FROM `{PROJECT_ID}.{DATASET_BRONZE}.linkedinads_campaigns`
         WHERE Campaign__Campaign_Id IS NOT NULL
         AND DATE(Row_Updated_At) = '{D_MINUS_1}'
 
-        UNION DISTINCT
+        UNION ALL
 
-        SELECT DISTINCT
+        SELECT
             3 AS sk_plataforma,
             CAST(CampaignId AS STRING) AS id_campanha_original,
             CampaignName AS nm_campanha,
             CampaignStatus AS ds_status_campanha,
             CAST(CampaignType AS STRING) AS ds_objetivo_campanha,
-            CAST(NULL AS DATE) AS dt_inicio_campanha
+            CAST(NULL AS DATE) AS dt_inicio_campanha,
+            CAST(Row_Updated_At AS TIMESTAMP) AS row_updated_at
         FROM `{PROJECT_ID}.{DATASET_BRONZE}.microsoftads_campaigns`
         WHERE CampaignId IS NOT NULL
         AND DATE(Row_Updated_At) = '{D_MINUS_1}'
+    ),
+
+    -- Uma campanha pode ter mais de uma versão no período (mudança de status, nome etc.).
+    -- O MERGE exige no máximo uma linha de origem por sk_campanha, então mantém só a mais recente.
+    staging_dedup AS (
+        SELECT * EXCEPT (row_updated_at)
+        FROM staging_campanhas
+        WHERE id_campanha_original IS NOT NULL
+        QUALIFY ROW_NUMBER() OVER (
+            PARTITION BY sk_plataforma, id_campanha_original
+            ORDER BY row_updated_at DESC, nm_campanha DESC, ds_status_campanha DESC
+        ) = 1
     ),
 
     classificacao_taxonomia AS (
@@ -120,7 +136,7 @@ USING (
                 WHEN REGEXP_CONTAINS(LOWER(nm_campanha), r'tofu|trafego|impulsionamento|views|projeto') THEN 'tofu'
                 ELSE NULL
             END AS dif
-        FROM staging_campanhas
+        FROM staging_dedup
     )
 
     SELECT
