@@ -32,7 +32,7 @@ WITH staging_fato AS (
         SAFE_CAST(Cost__Amount_spend AS NUMERIC) AS vl_custo,
         SAFE_CAST(Performance__Impressions AS INT64) AS nr_impressoes,
         SAFE_CAST(Performance__Clicks AS INT64) AS nr_cliques,
-        SAFE_CAST(Conversions_Leads__Total AS NUMERIC) AS nr_conversoes
+        SAFE_CAST(Conversions__Leads___Total AS NUMERIC) AS nr_conversoes
     FROM `{PROJECT_ID}.{DATASET_BRONZE}.metaads_reports`
 
     UNION ALL
