@@ -12,6 +12,8 @@ TABLE_DIM_AD = os.environ.get("TABLE_DIM_AD", "dim_ad")
 TABLE_DIM_CAMPANHA = os.environ.get("TABLE_DIM_CAMPANHA", "dim_campanha")
 TABLE_DIM_TRAFEGO_GA4 = os.environ.get("TABLE_DIM_TRAFEGO_GA4", "dim_trafego_ga4")
 TABLE_FATO_SESSOES_GA4 = os.environ.get("TABLE_FATO_SESSOES_GA4", "fato_sessoes_ga4")
+DATASET_GOLD = os.environ.get("DATASET_GOLD", "midiapaga_gold")
+TABLE_FATO_PERFORMANCE_MIDIA = os.environ.get("TABLE_FATO_PERFORMANCE_MIDIA", "fato_performance_midia")
 
 SCHEMA_MIDIAS_PAGAS = [
     bigquery.SchemaField("data", "DATE", mode="NULLABLE"),
@@ -68,6 +70,43 @@ SCHEMA_FATO_SESSOES_GA4 = [
     bigquery.SchemaField("source_medium", "STRING", mode="NULLABLE"),
     bigquery.SchemaField("sessoes_ga4", "INT64", mode="NULLABLE"),
 ]
+
+SCHEMA_FATO_PERFORMANCE_MIDIA = [
+    bigquery.SchemaField("Date", "DATE", mode="NULLABLE"),
+    bigquery.SchemaField("nm_campanha", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("campanha_tratada", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("plataforma", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("funil", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("dif", "STRING", mode="NULLABLE"),
+    bigquery.SchemaField("Investimento", "FLOAT64", mode="NULLABLE"),
+    bigquery.SchemaField("Impressões", "INT64", mode="NULLABLE"),
+    bigquery.SchemaField("Cliques", "INT64", mode="NULLABLE"),
+    bigquery.SchemaField("Conversões", "FLOAT64", mode="NULLABLE"),
+    bigquery.SchemaField("Sessões", "INT64", mode="NULLABLE"),
+    bigquery.SchemaField("CPM", "FLOAT64", mode="NULLABLE"),
+    bigquery.SchemaField("CPC", "FLOAT64", mode="NULLABLE"),
+    bigquery.SchemaField("CPL", "FLOAT64", mode="NULLABLE"),
+]
+
+
+def create_fato_performance_midia_if_not_exists():
+    client = bigquery.Client(project=PROJECT_ID)
+
+    dataset_ref = bigquery.Dataset(f"{PROJECT_ID}.{DATASET_GOLD}")
+    dataset_ref.location = "US"
+    client.create_dataset(dataset_ref, exists_ok=True)
+    logger.info("Dataset %s pronto.", DATASET_GOLD)
+
+    table_ref = f"{PROJECT_ID}.{DATASET_GOLD}.{TABLE_FATO_PERFORMANCE_MIDIA}"
+    table = bigquery.Table(table_ref, schema=SCHEMA_FATO_PERFORMANCE_MIDIA)
+    table.time_partitioning = bigquery.TimePartitioning(field="Date")
+    table.clustering_fields = ["plataforma", "campanha_tratada"]
+    table.description = "Tabela Analítica OBT (Gold) contendo funil completo: Investimento -> Impressões -> Cliques -> Sessões -> Conversões."
+    try:
+        client.create_table(table)
+        logger.info("Tabela %s criada com sucesso.", TABLE_FATO_PERFORMANCE_MIDIA)
+    except Conflict:
+        logger.info("Tabela %s já existe, nenhuma ação necessária.", TABLE_FATO_PERFORMANCE_MIDIA)
 
 
 def create_dim_trafego_ga4_if_not_exists():

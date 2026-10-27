@@ -24,7 +24,7 @@ steps:
       - --image=gcr.io/jota-dados-integracao-ga4/paid-media-job:latest
       - --region=southamerica-east1
       - >-
-        --set-env-vars=PROJECT_ID=$PROJECT_ID,DATASET_BRONZE=midiapaga_bronze,DATASET_SILVER=midiapaga_silver,DATASET_GA4=ga4_metrics_us,FULL_LOAD=,REPROCESS_DATE=
+        --set-env-vars=PROJECT_ID=$PROJECT_ID,DATASET_BRONZE=midiapaga_bronze,DATASET_SILVER=midiapaga_silver,DATASET_GOLD=midiapaga_gold,DATASET_GA4=ga4_metrics_us,FULL_LOAD=,REPROCESS_DATE=
 
 images:
   - 'gcr.io/jota-dados-integracao-ga4/paid-media-job:latest'
