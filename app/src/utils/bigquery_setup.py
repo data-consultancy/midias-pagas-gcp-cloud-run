@@ -78,14 +78,14 @@ SCHEMA_FATO_PERFORMANCE_MIDIA = [
     bigquery.SchemaField("plataforma", "STRING", mode="NULLABLE"),
     bigquery.SchemaField("funil", "STRING", mode="NULLABLE"),
     bigquery.SchemaField("dif", "STRING", mode="NULLABLE"),
-    bigquery.SchemaField("Investimento", "FLOAT64", mode="NULLABLE"),
+    bigquery.SchemaField("Investimento", "NUMERIC", mode="NULLABLE"),
     bigquery.SchemaField("Impressões", "INT64", mode="NULLABLE"),
     bigquery.SchemaField("Cliques", "INT64", mode="NULLABLE"),
     bigquery.SchemaField("Conversões", "FLOAT64", mode="NULLABLE"),
     bigquery.SchemaField("Sessões", "INT64", mode="NULLABLE"),
-    bigquery.SchemaField("CPM", "FLOAT64", mode="NULLABLE"),
-    bigquery.SchemaField("CPC", "FLOAT64", mode="NULLABLE"),
-    bigquery.SchemaField("CPL", "FLOAT64", mode="NULLABLE"),
+    bigquery.SchemaField("CPM", "NUMERIC", mode="NULLABLE"),
+    bigquery.SchemaField("CPC", "NUMERIC", mode="NULLABLE"),
+    bigquery.SchemaField("CPL", "NUMERIC", mode="NULLABLE"),
 ]
 
 

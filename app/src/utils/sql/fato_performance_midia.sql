@@ -38,7 +38,7 @@ combinacao_bruta AS (
         c.campanha_tratada,
         c.funil,
         c.dif,
-        SAFE_CAST(f.vl_custo AS FLOAT64) AS Investimento,
+        SAFE_CAST(f.vl_custo AS NUMERIC) AS Investimento,
         SAFE_CAST(f.nr_impressoes AS INT64) AS Impressoes,
         SAFE_CAST(f.nr_cliques AS INT64) AS Cliques,
         SAFE_CAST(f.nr_conversoes AS FLOAT64) AS Conversoes,
@@ -107,10 +107,10 @@ SELECT
     Cliques,
     Conversoes AS `Conversões`,
     Sessoes AS `Sessões`,
-    -- SAFE_DIVIDE evita erro de divisão por zero
+    -- SAFE_DIVIDE evita erro de divisão por zero; taxas monetárias em NUMERIC, como o Investimento
     SAFE_DIVIDE(Investimento, Impressoes) * 1000 AS CPM,
     SAFE_DIVIDE(Investimento, Cliques) AS CPC,
-    SAFE_DIVIDE(Investimento, Conversoes) AS CPL
+    SAFE_CAST(SAFE_DIVIDE(Investimento, Conversoes) AS NUMERIC) AS CPL
 FROM agregacao_final;
 
 COMMIT TRANSACTION;
