@@ -41,7 +41,7 @@ combinacao_bruta AS (
         SAFE_CAST(f.vl_custo AS NUMERIC) AS Investimento,
         SAFE_CAST(f.nr_impressoes AS INT64) AS Impressoes,
         SAFE_CAST(f.nr_cliques AS INT64) AS Cliques,
-        SAFE_CAST(f.nr_conversoes AS FLOAT64) AS Conversoes,
+        SAFE_CAST(f.nr_conversoes AS NUMERIC) AS Conversoes,
         0 AS Sessoes
     FROM `{PROJECT_ID}.{DATASET_SILVER}.{TABLE_FATO_PERFORMANCE_AD}` f
     LEFT JOIN `{PROJECT_ID}.{DATASET_SILVER}.{TABLE_DIM_CAMPANHA}` c
