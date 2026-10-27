@@ -7,6 +7,7 @@ from utils.bigquery_setup import (
     create_dim_ad_if_not_exists,
     create_dim_trafego_ga4_if_not_exists,
     create_fato_sessoes_ga4_if_not_exists,
+    create_fato_performance_ad_if_not_exists,
     create_fato_performance_midia_if_not_exists,
 )
 from utils.insert_midias_pagas import insert_midias_pagas
@@ -14,6 +15,7 @@ from utils.insert_dim_campanha import insert_dim_campanha
 from utils.insert_dim_ad import insert_dim_ad
 from utils.insert_dim_trafego_ga4 import insert_dim_trafego_ga4
 from utils.insert_fato_sessoes_ga4 import insert_fato_sessoes_ga4
+from utils.insert_fato_performance_ad import insert_fato_performance_ad
 from utils.insert_fato_performance_midia import insert_fato_performance_midia
 
 logging.basicConfig(
@@ -31,13 +33,15 @@ def main():
     create_dim_ad_if_not_exists()
     create_dim_trafego_ga4_if_not_exists()
     create_fato_sessoes_ga4_if_not_exists()
+    create_fato_performance_ad_if_not_exists()
     create_fato_performance_midia_if_not_exists()
     insert_midias_pagas()
     insert_dim_campanha()
     insert_dim_ad()
     insert_dim_trafego_ga4()
     insert_fato_sessoes_ga4()
-    # Gold depende de dim_campanha e fato_sessoes_ga4 atualizadas, por isso roda por último
+    insert_fato_performance_ad()
+    # Gold depende de dim_campanha, fato_sessoes_ga4 e fato_performance_ad atualizadas, por isso roda por último
     insert_fato_performance_midia()
     logger.info("Job finalizado com sucesso")
 

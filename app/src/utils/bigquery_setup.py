@@ -12,6 +12,7 @@ TABLE_DIM_AD = os.environ.get("TABLE_DIM_AD", "dim_ad")
 TABLE_DIM_CAMPANHA = os.environ.get("TABLE_DIM_CAMPANHA", "dim_campanha")
 TABLE_DIM_TRAFEGO_GA4 = os.environ.get("TABLE_DIM_TRAFEGO_GA4", "dim_trafego_ga4")
 TABLE_FATO_SESSOES_GA4 = os.environ.get("TABLE_FATO_SESSOES_GA4", "fato_sessoes_ga4")
+TABLE_FATO_PERFORMANCE_AD = os.environ.get("TABLE_FATO_PERFORMANCE_AD", "fato_performance_ad")
 DATASET_GOLD = os.environ.get("DATASET_GOLD", "midiapaga_gold")
 TABLE_FATO_PERFORMANCE_MIDIA = os.environ.get("TABLE_FATO_PERFORMANCE_MIDIA", "fato_performance_midia")
 
@@ -70,6 +71,33 @@ SCHEMA_FATO_SESSOES_GA4 = [
     bigquery.SchemaField("source_medium", "STRING", mode="NULLABLE"),
     bigquery.SchemaField("sessoes_ga4", "INT64", mode="NULLABLE"),
 ]
+
+SCHEMA_FATO_PERFORMANCE_AD = [
+    bigquery.SchemaField("dt_referencia", "DATE", mode="NULLABLE", description="Data de referência da métrica"),
+    bigquery.SchemaField("sk_plataforma", "INT64", mode="NULLABLE", description="ID fixo da plataforma (FK)"),
+    bigquery.SchemaField("sk_campanha", "STRING", mode="NULLABLE", description="Chave da campanha (FK dim_campanha)"),
+    bigquery.SchemaField("sk_ad", "STRING", mode="NULLABLE", description="Chave do anúncio (FK dim_ad)"),
+    bigquery.SchemaField("vl_custo", "NUMERIC", mode="NULLABLE", description="Investimento"),
+    bigquery.SchemaField("nr_impressoes", "INT64", mode="NULLABLE", description="Número de impressões"),
+    bigquery.SchemaField("nr_cliques", "INT64", mode="NULLABLE", description="Número de cliques"),
+    bigquery.SchemaField("nr_conversoes", "NUMERIC", mode="NULLABLE", description="Número de conversões"),
+]
+
+
+def create_fato_performance_ad_if_not_exists():
+    client = bigquery.Client(project=PROJECT_ID)
+
+    table_ref = f"{PROJECT_ID}.{DATASET_SILVER}.{TABLE_FATO_PERFORMANCE_AD}"
+    table = bigquery.Table(table_ref, schema=SCHEMA_FATO_PERFORMANCE_AD)
+    table.time_partitioning = bigquery.TimePartitioning(field="dt_referencia")
+    table.clustering_fields = ["sk_plataforma", "sk_campanha"]
+    table.description = "Fato de performance diária por anúncio/campanha das plataformas de mídia paga."
+    try:
+        client.create_table(table)
+        logger.info("Tabela %s criada com sucesso.", TABLE_FATO_PERFORMANCE_AD)
+    except Conflict:
+        logger.info("Tabela %s já existe, nenhuma ação necessária.", TABLE_FATO_PERFORMANCE_AD)
+
 
 SCHEMA_FATO_PERFORMANCE_MIDIA = [
     bigquery.SchemaField("Date", "DATE", mode="NULLABLE"),
